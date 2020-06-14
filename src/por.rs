@@ -84,6 +84,116 @@ pub fn encode_simple(piece: &mut Piece, iv: Block, breadth_iterations: usize, sb
     }
 }
 
+pub fn encode_pipelined_x4(
+    mut pieces: [&mut Piece; 4],
+    ivs: [Block; 4],
+    breadth_iterations: usize,
+    sbox: &SBoxDirect,
+) {
+    for _ in 0..breadth_iterations {
+        for (piece, iv) in pieces.iter_mut().zip(ivs.iter()) {
+            let mut feedback = *iv;
+            piece.chunks_exact_mut(BLOCK_SIZE).for_each(|mut block| {
+                feedback = sbox.get([
+                    block[0] ^ feedback[0],
+                    block[1] ^ feedback[1],
+                    block[2] ^ feedback[2],
+                ]);
+
+                block.write_all(&feedback[..]).unwrap();
+            });
+        }
+    }
+}
+
+pub fn encode_pipelined_x8(
+    mut pieces: [&mut Piece; 8],
+    ivs: [Block; 8],
+    breadth_iterations: usize,
+    sbox: &SBoxDirect,
+) {
+    for _ in 0..breadth_iterations {
+        for (piece, iv) in pieces.iter_mut().zip(ivs.iter()) {
+            let mut feedback = *iv;
+            piece.chunks_exact_mut(BLOCK_SIZE).for_each(|mut block| {
+                feedback = sbox.get([
+                    block[0] ^ feedback[0],
+                    block[1] ^ feedback[1],
+                    block[2] ^ feedback[2],
+                ]);
+
+                block.write_all(&feedback[..]).unwrap();
+            });
+        }
+    }
+}
+
+pub fn encode_pipelined_x16(
+    mut pieces: [&mut Piece; 16],
+    ivs: [Block; 16],
+    breadth_iterations: usize,
+    sbox: &SBoxDirect,
+) {
+    for _ in 0..breadth_iterations {
+        for (piece, iv) in pieces.iter_mut().zip(ivs.iter()) {
+            let mut feedback = *iv;
+            piece.chunks_exact_mut(BLOCK_SIZE).for_each(|mut block| {
+                feedback = sbox.get([
+                    block[0] ^ feedback[0],
+                    block[1] ^ feedback[1],
+                    block[2] ^ feedback[2],
+                ]);
+
+                block.write_all(&feedback[..]).unwrap();
+            });
+        }
+    }
+}
+
+pub fn encode_pipelined_x32(
+    mut pieces: [&mut Piece; 32],
+    ivs: [Block; 32],
+    breadth_iterations: usize,
+    sbox: &SBoxDirect,
+) {
+    for _ in 0..breadth_iterations {
+        for (piece, iv) in pieces.iter_mut().zip(ivs.iter()) {
+            let mut feedback = *iv;
+            piece.chunks_exact_mut(BLOCK_SIZE).for_each(|mut block| {
+                feedback = sbox.get([
+                    block[0] ^ feedback[0],
+                    block[1] ^ feedback[1],
+                    block[2] ^ feedback[2],
+                ]);
+
+                block.write_all(&feedback[..]).unwrap();
+            });
+        }
+    }
+}
+
+pub fn encode_pipelined_x64(
+    mut pieces: [&mut Piece; 64],
+    ivs: [Block; 64],
+    breadth_iterations: usize,
+    sbox: &SBoxDirect,
+) {
+    for _ in 0..breadth_iterations {
+        for (piece, iv) in pieces.iter_mut().zip(ivs.iter()) {
+            let mut feedback = *iv;
+            piece.chunks_exact_mut(BLOCK_SIZE).for_each(|mut block| {
+                feedback = sbox.get([
+                    block[0] ^ feedback[0],
+                    block[1] ^ feedback[1],
+                    block[2] ^ feedback[2],
+                ]);
+
+                block.write_all(&feedback[..]).unwrap();
+            });
+        }
+    }
+}
+
 pub fn encode_simple_parallel(
     pieces: &mut [Piece],
     iv: Block,
@@ -98,6 +208,32 @@ pub fn encode_simple_parallel(
                 encode_simple(piece, iv, breadth_iterations, &sbox);
             }
         });
+}
+
+pub fn encode_pipelined_x64_parallel(
+    pieces: &mut [Piece],
+    // TODO: Should IV be different?
+    iv: Block,
+    breadth_iterations: usize,
+    sbox: &SBoxDirect,
+) {
+    assert!(pieces.len() % 64 == 0);
+    pieces.par_chunks_mut(64).for_each(|pieces: &mut [Piece]| {
+        for _ in 0..breadth_iterations {
+            for piece in pieces.iter_mut() {
+                let mut feedback = iv;
+                piece.chunks_exact_mut(BLOCK_SIZE).for_each(|mut block| {
+                    feedback = sbox.get([
+                        block[0] ^ feedback[0],
+                        block[1] ^ feedback[1],
+                        block[2] ^ feedback[2],
+                    ]);
+
+                    block.write_all(&feedback[..]).unwrap();
+                });
+            }
+        }
+    });
 }
 
 pub fn decode_simple(piece: &mut Piece, iv: Block, breadth_iterations: usize, sbox: &SBoxInverse) {
@@ -154,6 +290,38 @@ mod tests {
             decode_simple(&mut encoding, iv, iterations, &sbox_inverse);
 
             assert_eq!(encoding[..], input[..]);
+        }
+
+        for &iterations in &[1, 10] {
+            let mut encodings_1 = input;
+            let mut encodings_2 = input;
+            let mut encodings_3 = input;
+            let mut encodings_4 = input;
+            encode_pipelined_x4(
+                [
+                    &mut encodings_1,
+                    &mut encodings_2,
+                    &mut encodings_3,
+                    &mut encodings_4,
+                ],
+                [iv; 4],
+                iterations,
+                &sbox,
+            );
+
+            assert_ne!(encodings_1[..], input[..]);
+            assert_ne!(encodings_2[..], input[..]);
+            assert_ne!(encodings_3[..], input[..]);
+            assert_ne!(encodings_4[..], input[..]);
+
+            decode_simple(&mut encodings_1, iv, iterations, &sbox_inverse);
+            decode_simple(&mut encodings_2, iv, iterations, &sbox_inverse);
+            decode_simple(&mut encodings_3, iv, iterations, &sbox_inverse);
+            decode_simple(&mut encodings_4, iv, iterations, &sbox_inverse);
+            assert_eq!(encodings_1[..], input[..]);
+            assert_eq!(encodings_2[..], input[..]);
+            assert_eq!(encodings_3[..], input[..]);
+            assert_eq!(encodings_4[..], input[..]);
         }
 
         for &iterations in &[1, 10] {
