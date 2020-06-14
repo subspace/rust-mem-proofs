@@ -13,10 +13,10 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         let sbox_inverse = por::SBoxInverse::new();
 
         {
-            let mut group = c.benchmark_group("Memory-bound");
-            group.sample_size(100);
+            let mut group = c.benchmark_group("Memory-bound-single");
+            group.sample_size(10);
 
-            for &iterations in &[1_usize, 100, 3000] {
+            for &iterations in &[13_000_usize] {
                 group.bench_function(format!("Prove-{}-iterations", iterations), |b| {
                     b.iter(|| {
                         let mut piece = PIECE;
