@@ -2,8 +2,11 @@
 use criterion::criterion_group;
 use criterion::criterion_main;
 use criterion::Criterion;
+use rand::Rng;
 use rust_mem_proofs::por;
 use rust_mem_proofs::Piece;
+use rust_mem_proofs::PIECE_SIZE;
+use std::iter::FromIterator;
 use test_data::PIECE;
 
 pub fn criterion_benchmark(c: &mut Criterion) {
@@ -13,26 +16,25 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         let sbox_inverse = por::SBoxInverse::new();
 
         {
+            let mut piece = PIECE;
             let mut group = c.benchmark_group("Memory-bound-single");
             group.sample_size(10);
 
             for &iterations in &[13_000_usize] {
                 group.bench_function(format!("Prove-{}-iterations", iterations), |b| {
                     b.iter(|| {
-                        let mut piece = PIECE;
-                        criterion::black_box(por::encode_simple(&mut piece, iv, iterations, &sbox))
+                        por::encode_simple(criterion::black_box(&mut piece), iv, iterations, &sbox);
                     })
                 });
 
                 group.bench_function(format!("Verify-{}-iterations", iterations), |b| {
                     b.iter(|| {
-                        let mut piece = PIECE;
-                        criterion::black_box(por::decode_simple(
-                            &mut piece,
+                        por::decode_simple(
+                            criterion::black_box(&mut piece),
                             iv,
                             iterations,
                             &sbox_inverse,
-                        ))
+                        );
                     })
                 });
             }
@@ -55,13 +57,13 @@ pub fn criterion_benchmark(c: &mut Criterion) {
                         |b| {
                             b.iter(|| {
                                 let mut pieces = pieces.clone();
-                                criterion::black_box(por::encode_simple_parallel(
-                                    &mut pieces,
+                                por::encode_simple_parallel(
+                                    criterion::black_box(&mut pieces),
                                     iv,
                                     iterations,
                                     &sbox,
                                     concurrency,
-                                ))
+                                );
                             })
                         },
                     );
@@ -74,17 +76,52 @@ pub fn criterion_benchmark(c: &mut Criterion) {
                         |b| {
                             b.iter(|| {
                                 let mut pieces = pieces.clone();
-                                criterion::black_box(por::decode_simple_parallel(
-                                    &mut pieces,
+                                por::decode_simple_parallel(
+                                    criterion::black_box(&mut pieces),
                                     iv,
                                     iterations,
                                     &sbox_inverse,
                                     concurrency,
-                                ))
+                                );
                             })
                         },
                     );
                 }
+            }
+
+            group.finish();
+        }
+
+        {
+            let mut pieces = Vec::from_iter((0..32).map(|_| {
+                let mut piece = [0u8; PIECE_SIZE];
+                rand::thread_rng().fill(&mut piece[..]);
+                piece
+            }));
+
+            let mut group = c.benchmark_group("Memory-bound-throughput");
+            group.sample_size(10);
+
+            for &iterations in &[1_000_usize] {
+                group.bench_function(format!("Prove-{}-iterations-single", iterations), |b| {
+                    b.iter(|| {
+                        for piece in pieces.iter_mut() {
+                            por::encode_simple(criterion::black_box(piece), iv, iterations, &sbox);
+                        }
+                    })
+                });
+
+                group.bench_function(format!("Prove-{}-iterations-parallel", iterations), |b| {
+                    b.iter(|| {
+                        por::encode_simple_parallel(
+                            criterion::black_box(&mut pieces),
+                            iv,
+                            iterations,
+                            &sbox,
+                            1,
+                        );
+                    })
+                });
             }
 
             group.finish();
