@@ -1,8 +1,10 @@
 [package]
 name = "rust-mem-proofs"
+description = "Various memory-related implementations and benchmarks"
 version = "0.1.0"
 authors = ["Nazar Mokrynskyi <nazar@mokrynskyi.com>"]
 edition = "2018"
+license = "MIT"
 
 [dependencies]
 rayon = "1.3.0"
