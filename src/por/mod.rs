@@ -96,112 +96,164 @@ pub fn encode_simple(piece: &mut Piece, iv: Block, breadth_iterations: usize, sb
 }
 
 pub fn encode_pipelined_x4(
-    mut pieces: [&mut Piece; 4],
+    pieces: [&mut Piece; 4],
     ivs: [Block; 4],
     breadth_iterations: usize,
     sbox: &SBoxDirect,
 ) {
+    let mut feedbacks = ivs;
+    let [piece1, piece2, piece3, piece4] = pieces;
     for _ in 0..breadth_iterations {
-        for (piece, iv) in pieces.iter_mut().zip(ivs.iter()) {
-            let mut feedback = *iv;
-            piece.chunks_exact_mut(BLOCK_SIZE).for_each(|mut block| {
-                feedback = sbox.get([
-                    block[0] ^ feedback[0],
-                    block[1] ^ feedback[1],
-                    block[2] ^ feedback[2],
-                ]);
-
-                block.write_all(&feedback[..]).unwrap();
+        piece1
+            .chunks_exact_mut(BLOCK_SIZE)
+            .zip(piece2.chunks_exact_mut(BLOCK_SIZE))
+            .zip(piece3.chunks_exact_mut(BLOCK_SIZE))
+            .zip(piece4.chunks_exact_mut(BLOCK_SIZE))
+            .map(|(((block1, block2), block3), block4)| [block1, block2, block3, block4])
+            .for_each(|mut blocks| {
+                blocks
+                    .iter_mut()
+                    .zip(feedbacks.iter_mut())
+                    .for_each(|(block, feedback)| {
+                        *feedback = sbox.get([
+                            block[0] ^ feedback[0],
+                            block[1] ^ feedback[1],
+                            block[2] ^ feedback[2],
+                        ]);
+                        block.write_all(&feedback[..]).unwrap();
+                    });
             });
-        }
     }
 }
 
 pub fn encode_pipelined_x8(
-    mut pieces: [&mut Piece; 8],
+    pieces: [&mut Piece; 8],
     ivs: [Block; 8],
     breadth_iterations: usize,
     sbox: &SBoxDirect,
 ) {
+    let mut feedbacks = ivs;
+    let [piece1, piece2, piece3, piece4, piece5, piece6, piece7, piece8] = pieces;
     for _ in 0..breadth_iterations {
-        for (piece, iv) in pieces.iter_mut().zip(ivs.iter()) {
-            let mut feedback = *iv;
-            piece.chunks_exact_mut(BLOCK_SIZE).for_each(|mut block| {
-                feedback = sbox.get([
-                    block[0] ^ feedback[0],
-                    block[1] ^ feedback[1],
-                    block[2] ^ feedback[2],
-                ]);
-
-                block.write_all(&feedback[..]).unwrap();
+        piece1
+            .chunks_exact_mut(BLOCK_SIZE)
+            .zip(piece2.chunks_exact_mut(BLOCK_SIZE))
+            .zip(piece3.chunks_exact_mut(BLOCK_SIZE))
+            .zip(piece4.chunks_exact_mut(BLOCK_SIZE))
+            .zip(piece5.chunks_exact_mut(BLOCK_SIZE))
+            .zip(piece6.chunks_exact_mut(BLOCK_SIZE))
+            .zip(piece7.chunks_exact_mut(BLOCK_SIZE))
+            .zip(piece8.chunks_exact_mut(BLOCK_SIZE))
+            .map(
+                |(((((((block1, block2), block3), block4), block5), block6), block7), block8)| {
+                    [
+                        block1, block2, block3, block4, block5, block6, block7, block8,
+                    ]
+                },
+            )
+            .for_each(|mut blocks| {
+                blocks
+                    .iter_mut()
+                    .zip(feedbacks.iter_mut())
+                    .for_each(|(block, feedback)| {
+                        *feedback = sbox.get([
+                            block[0] ^ feedback[0],
+                            block[1] ^ feedback[1],
+                            block[2] ^ feedback[2],
+                        ]);
+                        block.write_all(&feedback[..]).unwrap();
+                    });
             });
-        }
     }
 }
 
 pub fn encode_pipelined_x16(
-    mut pieces: [&mut Piece; 16],
+    pieces: [&mut Piece; 16],
     ivs: [Block; 16],
     breadth_iterations: usize,
     sbox: &SBoxDirect,
 ) {
+    let mut feedbacks = ivs;
+    let [piece1, piece2, piece3, piece4, piece5, piece6, piece7, piece8, piece9, piece10, piece11, piece12, piece13, piece14, piece15, piece16] =
+        pieces;
     for _ in 0..breadth_iterations {
-        for (piece, iv) in pieces.iter_mut().zip(ivs.iter()) {
-            let mut feedback = *iv;
-            piece.chunks_exact_mut(BLOCK_SIZE).for_each(|mut block| {
-                feedback = sbox.get([
-                    block[0] ^ feedback[0],
-                    block[1] ^ feedback[1],
-                    block[2] ^ feedback[2],
-                ]);
-
-                block.write_all(&feedback[..]).unwrap();
+        piece1
+            .chunks_exact_mut(BLOCK_SIZE)
+            .zip(piece2.chunks_exact_mut(BLOCK_SIZE))
+            .zip(piece3.chunks_exact_mut(BLOCK_SIZE))
+            .zip(piece4.chunks_exact_mut(BLOCK_SIZE))
+            .zip(piece5.chunks_exact_mut(BLOCK_SIZE))
+            .zip(piece6.chunks_exact_mut(BLOCK_SIZE))
+            .zip(piece7.chunks_exact_mut(BLOCK_SIZE))
+            .zip(piece8.chunks_exact_mut(BLOCK_SIZE))
+            .zip(piece9.chunks_exact_mut(BLOCK_SIZE))
+            .zip(piece10.chunks_exact_mut(BLOCK_SIZE))
+            .zip(piece11.chunks_exact_mut(BLOCK_SIZE))
+            .zip(piece12.chunks_exact_mut(BLOCK_SIZE))
+            .zip(piece13.chunks_exact_mut(BLOCK_SIZE))
+            .zip(piece14.chunks_exact_mut(BLOCK_SIZE))
+            .zip(piece15.chunks_exact_mut(BLOCK_SIZE))
+            .zip(piece16.chunks_exact_mut(BLOCK_SIZE))
+            .map(
+                |(
+                    (
+                        (
+                            (
+                                (
+                                    (
+                                        (
+                                            (
+                                                (
+                                                    (
+                                                        (
+                                                            (
+                                                                (
+                                                                    ((block1, block2), block3),
+                                                                    block4,
+                                                                ),
+                                                                block5,
+                                                            ),
+                                                            block6,
+                                                        ),
+                                                        block7,
+                                                    ),
+                                                    block8,
+                                                ),
+                                                block9,
+                                            ),
+                                            block10,
+                                        ),
+                                        block11,
+                                    ),
+                                    block12,
+                                ),
+                                block13,
+                            ),
+                            block14,
+                        ),
+                        block15,
+                    ),
+                    block16,
+                )| {
+                    [
+                        block1, block2, block3, block4, block5, block6, block7, block8, block9,
+                        block10, block11, block12, block13, block14, block15, block16,
+                    ]
+                },
+            )
+            .for_each(|mut blocks| {
+                blocks
+                    .iter_mut()
+                    .zip(feedbacks.iter_mut())
+                    .for_each(|(block, feedback)| {
+                        *feedback = sbox.get([
+                            block[0] ^ feedback[0],
+                            block[1] ^ feedback[1],
+                            block[2] ^ feedback[2],
+                        ]);
+                        block.write_all(&feedback[..]).unwrap();
+                    });
             });
-        }
-    }
-}
-
-pub fn encode_pipelined_x32(
-    mut pieces: [&mut Piece; 32],
-    ivs: [Block; 32],
-    breadth_iterations: usize,
-    sbox: &SBoxDirect,
-) {
-    for _ in 0..breadth_iterations {
-        for (piece, iv) in pieces.iter_mut().zip(ivs.iter()) {
-            let mut feedback = *iv;
-            piece.chunks_exact_mut(BLOCK_SIZE).for_each(|mut block| {
-                feedback = sbox.get([
-                    block[0] ^ feedback[0],
-                    block[1] ^ feedback[1],
-                    block[2] ^ feedback[2],
-                ]);
-
-                block.write_all(&feedback[..]).unwrap();
-            });
-        }
-    }
-}
-
-pub fn encode_pipelined_x64(
-    mut pieces: [&mut Piece; 64],
-    ivs: [Block; 64],
-    breadth_iterations: usize,
-    sbox: &SBoxDirect,
-) {
-    for _ in 0..breadth_iterations {
-        for (piece, iv) in pieces.iter_mut().zip(ivs.iter()) {
-            let mut feedback = *iv;
-            piece.chunks_exact_mut(BLOCK_SIZE).for_each(|mut block| {
-                feedback = sbox.get([
-                    block[0] ^ feedback[0],
-                    block[1] ^ feedback[1],
-                    block[2] ^ feedback[2],
-                ]);
-
-                block.write_all(&feedback[..]).unwrap();
-            });
-        }
     }
 }
 
@@ -315,37 +367,37 @@ mod tests {
             assert_eq!(encoding[..], input[..]);
         }
 
-        // for &iterations in &[1, 10] {
-        //     let mut encodings_1 = input;
-        //     let mut encodings_2 = input;
-        //     let mut encodings_3 = input;
-        //     let mut encodings_4 = input;
-        //     encode_pipelined_x4(
-        //         [
-        //             &mut encodings_1,
-        //             &mut encodings_2,
-        //             &mut encodings_3,
-        //             &mut encodings_4,
-        //         ],
-        //         [iv; 4],
-        //         iterations,
-        //         &sbox,
-        //     );
-        //
-        //     assert_ne!(encodings_1[..], input[..]);
-        //     assert_ne!(encodings_2[..], input[..]);
-        //     assert_ne!(encodings_3[..], input[..]);
-        //     assert_ne!(encodings_4[..], input[..]);
-        //
-        //     decode_simple(&mut encodings_1, iv, iterations, &sbox_inverse);
-        //     decode_simple(&mut encodings_2, iv, iterations, &sbox_inverse);
-        //     decode_simple(&mut encodings_3, iv, iterations, &sbox_inverse);
-        //     decode_simple(&mut encodings_4, iv, iterations, &sbox_inverse);
-        //     assert_eq!(encodings_1[..], input[..]);
-        //     assert_eq!(encodings_2[..], input[..]);
-        //     assert_eq!(encodings_3[..], input[..]);
-        //     assert_eq!(encodings_4[..], input[..]);
-        // }
+        for &iterations in &[1, 10] {
+            let mut encodings_1 = input;
+            let mut encodings_2 = input;
+            let mut encodings_3 = input;
+            let mut encodings_4 = input;
+            encode_pipelined_x4(
+                [
+                    &mut encodings_1,
+                    &mut encodings_2,
+                    &mut encodings_3,
+                    &mut encodings_4,
+                ],
+                [iv; 4],
+                iterations,
+                &sbox,
+            );
+
+            assert_ne!(encodings_1[..], input[..]);
+            assert_ne!(encodings_2[..], input[..]);
+            assert_ne!(encodings_3[..], input[..]);
+            assert_ne!(encodings_4[..], input[..]);
+
+            decode_simple(&mut encodings_1, iv, iterations, &sbox_inverse);
+            decode_simple(&mut encodings_2, iv, iterations, &sbox_inverse);
+            decode_simple(&mut encodings_3, iv, iterations, &sbox_inverse);
+            decode_simple(&mut encodings_4, iv, iterations, &sbox_inverse);
+            assert_eq!(encodings_1[..], input[..]);
+            assert_eq!(encodings_2[..], input[..]);
+            assert_eq!(encodings_3[..], input[..]);
+            assert_eq!(encodings_4[..], input[..]);
+        }
 
         for &iterations in &[1, 10] {
             let inputs = vec![input; 3];
