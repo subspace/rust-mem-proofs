@@ -3,6 +3,7 @@ mod utils;
 use crate::Piece;
 use crate::PIECE_SIZE;
 use rayon::prelude::*;
+use std::convert::TryInto;
 use std::io::Write;
 
 const BLOCK_SIZE_BITS: u32 = 24;
@@ -364,6 +365,182 @@ fn decode_block_internal(block: &mut [u8], feedback: &Block, sbox: &SBoxInverse)
     block[2] = decoded[2] ^ feedback[2];
 }
 
+pub fn decode_pipelined(
+    piece: &mut Piece,
+    iv: Block,
+    breadth_iterations: usize,
+    sbox: &SBoxInverse,
+) {
+    for _ in 1..breadth_iterations {
+        decode_pipelined_internal(piece, None, sbox);
+    }
+
+    decode_pipelined_internal(piece, Some(iv), sbox);
+}
+
+fn decode_pipelined_internal(piece: &mut Piece, iv: Option<Block>, sbox: &SBoxInverse) {
+    let pipelining_factor = 8;
+    // 8 is our pipelining factor
+    let (sub_piece_1, remainder) =
+        piece.split_at_mut(PIECE_SIZE / pipelining_factor / BLOCK_SIZE * BLOCK_SIZE);
+    let (sub_piece_2, remainder) =
+        remainder.split_at_mut(PIECE_SIZE / pipelining_factor / BLOCK_SIZE * BLOCK_SIZE);
+    let (sub_piece_3, remainder) =
+        remainder.split_at_mut(PIECE_SIZE / pipelining_factor / BLOCK_SIZE * BLOCK_SIZE);
+    let (sub_piece_4, remainder) =
+        remainder.split_at_mut(PIECE_SIZE / pipelining_factor / BLOCK_SIZE * BLOCK_SIZE);
+    let (sub_piece_5, remainder) =
+        remainder.split_at_mut(PIECE_SIZE / pipelining_factor / BLOCK_SIZE * BLOCK_SIZE);
+    let (sub_piece_6, remainder) =
+        remainder.split_at_mut(PIECE_SIZE / pipelining_factor / BLOCK_SIZE * BLOCK_SIZE);
+    let (sub_piece_7, remainder) =
+        remainder.split_at_mut(PIECE_SIZE / pipelining_factor / BLOCK_SIZE * BLOCK_SIZE);
+    let (sub_piece_8, sub_piece_last) =
+        remainder.split_at_mut(PIECE_SIZE / pipelining_factor / BLOCK_SIZE * BLOCK_SIZE);
+
+    let feedback_2 = sub_piece_1[(sub_piece_1.len() - BLOCK_SIZE)..]
+        .try_into()
+        .unwrap();
+    let feedback_3 = sub_piece_2[(sub_piece_2.len() - BLOCK_SIZE)..]
+        .try_into()
+        .unwrap();
+    let feedback_4 = sub_piece_3[(sub_piece_3.len() - BLOCK_SIZE)..]
+        .try_into()
+        .unwrap();
+    let feedback_5 = sub_piece_4[(sub_piece_4.len() - BLOCK_SIZE)..]
+        .try_into()
+        .unwrap();
+    let feedback_6 = sub_piece_5[(sub_piece_5.len() - BLOCK_SIZE)..]
+        .try_into()
+        .unwrap();
+    let feedback_7 = sub_piece_6[(sub_piece_6.len() - BLOCK_SIZE)..]
+        .try_into()
+        .unwrap();
+    let feedback_8 = sub_piece_7[(sub_piece_7.len() - BLOCK_SIZE)..]
+        .try_into()
+        .unwrap();
+    let feedback_last = sub_piece_8[(sub_piece_8.len() - BLOCK_SIZE)..]
+        .try_into()
+        .unwrap();
+
+    for i in (1..(PIECE_SIZE / pipelining_factor / BLOCK_SIZE)).rev() {
+        let (ends_with_feedback_1, starts_with_block_1) = sub_piece_1.split_at_mut(i * BLOCK_SIZE);
+        let (ends_with_feedback_2, starts_with_block_2) = sub_piece_2.split_at_mut(i * BLOCK_SIZE);
+        let (ends_with_feedback_3, starts_with_block_3) = sub_piece_3.split_at_mut(i * BLOCK_SIZE);
+        let (ends_with_feedback_4, starts_with_block_4) = sub_piece_4.split_at_mut(i * BLOCK_SIZE);
+        let (ends_with_feedback_5, starts_with_block_5) = sub_piece_5.split_at_mut(i * BLOCK_SIZE);
+        let (ends_with_feedback_6, starts_with_block_6) = sub_piece_6.split_at_mut(i * BLOCK_SIZE);
+        let (ends_with_feedback_7, starts_with_block_7) = sub_piece_7.split_at_mut(i * BLOCK_SIZE);
+        let (ends_with_feedback_8, starts_with_block_8) = sub_piece_8.split_at_mut(i * BLOCK_SIZE);
+
+        let feedback_1 = ends_with_feedback_1[(ends_with_feedback_1.len() - BLOCK_SIZE)..]
+            .as_ref()
+            .try_into()
+            .unwrap();
+        let feedback_2 = ends_with_feedback_2[(ends_with_feedback_2.len() - BLOCK_SIZE)..]
+            .as_ref()
+            .try_into()
+            .unwrap();
+        let feedback_3 = ends_with_feedback_3[(ends_with_feedback_3.len() - BLOCK_SIZE)..]
+            .as_ref()
+            .try_into()
+            .unwrap();
+        let feedback_4 = ends_with_feedback_4[(ends_with_feedback_4.len() - BLOCK_SIZE)..]
+            .as_ref()
+            .try_into()
+            .unwrap();
+        let feedback_5 = ends_with_feedback_5[(ends_with_feedback_5.len() - BLOCK_SIZE)..]
+            .as_ref()
+            .try_into()
+            .unwrap();
+        let feedback_6 = ends_with_feedback_6[(ends_with_feedback_6.len() - BLOCK_SIZE)..]
+            .as_ref()
+            .try_into()
+            .unwrap();
+        let feedback_7 = ends_with_feedback_7[(ends_with_feedback_7.len() - BLOCK_SIZE)..]
+            .as_ref()
+            .try_into()
+            .unwrap();
+        let feedback_8 = ends_with_feedback_8[(ends_with_feedback_8.len() - BLOCK_SIZE)..]
+            .as_ref()
+            .try_into()
+            .unwrap();
+
+        let (block_1, _) = starts_with_block_1.split_at_mut(BLOCK_SIZE);
+        let (block_2, _) = starts_with_block_2.split_at_mut(BLOCK_SIZE);
+        let (block_3, _) = starts_with_block_3.split_at_mut(BLOCK_SIZE);
+        let (block_4, _) = starts_with_block_4.split_at_mut(BLOCK_SIZE);
+        let (block_5, _) = starts_with_block_5.split_at_mut(BLOCK_SIZE);
+        let (block_6, _) = starts_with_block_6.split_at_mut(BLOCK_SIZE);
+        let (block_7, _) = starts_with_block_7.split_at_mut(BLOCK_SIZE);
+        let (block_8, _) = starts_with_block_8.split_at_mut(BLOCK_SIZE);
+
+        decode_block_internal(block_1, feedback_1, sbox);
+        decode_block_internal(block_2, feedback_2, sbox);
+        decode_block_internal(block_3, feedback_3, sbox);
+        decode_block_internal(block_4, feedback_4, sbox);
+        decode_block_internal(block_5, feedback_5, sbox);
+        decode_block_internal(block_6, feedback_6, sbox);
+        decode_block_internal(block_7, feedback_7, sbox);
+        decode_block_internal(block_8, feedback_8, sbox);
+    }
+
+    // Because piece size is not a multiple of block and pipelining factor, we have 5 more elements
+    // remaining here
+    let (sub_piece_last_1, remainder) = sub_piece_last.split_at_mut(BLOCK_SIZE);
+    let (sub_piece_last_2, remainder) = remainder.split_at_mut(BLOCK_SIZE);
+    let (sub_piece_last_3, remainder) = remainder.split_at_mut(BLOCK_SIZE);
+    let (sub_piece_last_4, sub_piece_last_5) = remainder.split_at_mut(BLOCK_SIZE);
+    decode_block_internal(
+        sub_piece_last_5,
+        sub_piece_last_4[..].try_into().unwrap(),
+        sbox,
+    );
+    decode_block_internal(
+        sub_piece_last_4,
+        sub_piece_last_3[..].try_into().unwrap(),
+        sbox,
+    );
+    decode_block_internal(
+        sub_piece_last_3,
+        sub_piece_last_2[..].try_into().unwrap(),
+        sbox,
+    );
+    decode_block_internal(
+        sub_piece_last_2,
+        sub_piece_last_1[..].try_into().unwrap(),
+        sbox,
+    );
+    decode_block_internal(sub_piece_last_1, &feedback_last, sbox);
+
+    let feedback_1 = iv.unwrap_or_else(|| {
+        // TODO: `- 1` and `sub_piece_last_5.len() - 1` is a hack caused by the fact that current
+        //  piece length is not divisible by block size without remainder
+        sub_piece_last_5[(sub_piece_last_5.len() - BLOCK_SIZE - 1)..(sub_piece_last_5.len() - 1)]
+            .try_into()
+            .unwrap()
+    });
+
+    // Finish last iteration that remains after loop above
+    let (block_1, _) = sub_piece_1.split_at_mut(BLOCK_SIZE);
+    let (block_2, _) = sub_piece_2.split_at_mut(BLOCK_SIZE);
+    let (block_3, _) = sub_piece_3.split_at_mut(BLOCK_SIZE);
+    let (block_4, _) = sub_piece_4.split_at_mut(BLOCK_SIZE);
+    let (block_5, _) = sub_piece_5.split_at_mut(BLOCK_SIZE);
+    let (block_6, _) = sub_piece_6.split_at_mut(BLOCK_SIZE);
+    let (block_7, _) = sub_piece_7.split_at_mut(BLOCK_SIZE);
+    let (block_8, _) = sub_piece_8.split_at_mut(BLOCK_SIZE);
+
+    decode_block_internal(block_1, &feedback_1, sbox);
+    decode_block_internal(block_2, &feedback_2, sbox);
+    decode_block_internal(block_3, &feedback_3, sbox);
+    decode_block_internal(block_4, &feedback_4, sbox);
+    decode_block_internal(block_5, &feedback_5, sbox);
+    decode_block_internal(block_6, &feedback_6, sbox);
+    decode_block_internal(block_7, &feedback_7, sbox);
+    decode_block_internal(block_8, &feedback_8, sbox);
+}
+
 pub fn decode_simple_parallel(
     pieces: &mut [Piece],
     iv: Block,
@@ -387,7 +564,7 @@ mod tests {
     use rand::Rng;
 
     #[test]
-    fn test_simple() {
+    fn test() {
         let iv = [1, 2, 3];
         let sbox = SBoxDirect::new();
         let sbox_inverse = SBoxInverse::new();
@@ -400,9 +577,17 @@ mod tests {
 
             assert_ne!(encoding[..], input[..]);
 
-            decode_simple(&mut encoding, iv, iterations, &sbox_inverse);
+            {
+                let mut encoding = encoding;
+                decode_simple(&mut encoding, iv, iterations, &sbox_inverse);
+                assert_eq!(encoding[..], input[..]);
+            }
 
-            assert_eq!(encoding[..], input[..]);
+            {
+                let mut encoding = encoding;
+                decode_pipelined(&mut encoding, iv, iterations, &sbox_inverse);
+                assert_eq!(encoding[..], input[..]);
+            }
         }
 
         for &iterations in &[1, 10] {

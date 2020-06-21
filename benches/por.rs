@@ -141,9 +141,20 @@ pub fn criterion_benchmark(c: &mut Criterion) {
                     })
                 });
 
-                group.bench_function(format!("Verify-{}-iterations", iterations), |b| {
+                group.bench_function(format!("Verify-{}-iterations-simple", iterations), |b| {
                     b.iter(|| {
                         por::decode_simple(
+                            criterion::black_box(&mut piece),
+                            iv,
+                            iterations,
+                            &sbox_inverse,
+                        );
+                    })
+                });
+
+                group.bench_function(format!("Verify-{}-iterations-pipelined", iterations), |b| {
+                    b.iter(|| {
+                        por::decode_pipelined(
                             criterion::black_box(&mut piece),
                             iv,
                             iterations,
