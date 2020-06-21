@@ -25,10 +25,27 @@ const AES_SBOX: [u8; 256] = [
 
 type Block = [u8; 3];
 
-pub struct SBoxDirect(Vec<Block>);
+pub struct SBoxDirect();
 
 impl SBoxDirect {
     /// Create direct SBox used for encoding
+    pub fn new() -> Self {
+        Self()
+    }
+
+    fn get(&self, x: Block) -> Block {
+        [
+            AES_SBOX[x[0] as usize],
+            AES_SBOX[x[1] as usize],
+            AES_SBOX[x[2] as usize],
+        ]
+    }
+}
+
+pub struct SBoxInverse(Vec<Block>);
+
+impl SBoxInverse {
+    /// Create inverse SBox used for decoding
     pub fn new() -> Self {
         let mut result = vec![[0_u8; 3]; 2_usize.pow(BLOCK_SIZE_BITS)];
 
@@ -49,23 +66,6 @@ impl SBoxDirect {
     fn get(&self, y: Block) -> Block {
         let index = u32::from_be_bytes([0, y[0], y[1], y[2]]);
         self.0[index as usize]
-    }
-}
-
-pub struct SBoxInverse();
-
-impl SBoxInverse {
-    /// Create inverse SBox used for decoding
-    pub fn new() -> Self {
-        Self()
-    }
-
-    fn get(&self, x: Block) -> Block {
-        [
-            AES_SBOX[x[0] as usize],
-            AES_SBOX[x[1] as usize],
-            AES_SBOX[x[2] as usize],
-        ]
     }
 }
 
