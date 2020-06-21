@@ -25,20 +25,28 @@ const AES_SBOX: [u8; 256] = [
 
 type Block = [u8; 3];
 
-pub struct SBoxDirect();
+pub struct SBoxDirect(Vec<Block>);
 
 impl SBoxDirect {
     /// Create direct SBox used for encoding
     pub fn new() -> Self {
-        Self()
+        let mut result = vec![[0_u8; 3]; 2_usize.pow(BLOCK_SIZE_BITS)];
+
+        for x in 0..2_u32.pow(BLOCK_SIZE_BITS) {
+            let [.., x1, x2, x3] = x.to_be_bytes();
+            result[x as usize] = [
+                AES_SBOX[x1 as usize],
+                AES_SBOX[x2 as usize],
+                AES_SBOX[x3 as usize],
+            ];
+        }
+
+        Self(result)
     }
 
     fn get(&self, x: Block) -> Block {
-        [
-            AES_SBOX[x[0] as usize],
-            AES_SBOX[x[1] as usize],
-            AES_SBOX[x[2] as usize],
-        ]
+        let index = u32::from_be_bytes([0, x[0], x[1], x[2]]);
+        self.0[index as usize]
     }
 }
 
