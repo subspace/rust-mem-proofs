@@ -157,19 +157,20 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         }
 
         {
-            let pieces: Vec<Piece> = (0..512_usize).map(|_| PIECE).collect();
+            let pieces: Vec<Piece> = (0..=255_usize).map(|_| PIECE).collect();
+            let ivs: Vec<[u8; 3]> = (0..=255_u8).map(|i| [i, i + 1, i + 2]).collect();
             let mut group = c.benchmark_group("Memory-bound-parallel");
             group.sample_size(10);
 
             for &iterations in &[13_000_usize] {
                 group.bench_function(
-                    format!("Prove-{}-iterations-pipelined-x64", iterations),
+                    format!("Prove-{}-iterations-pipelined-x8", iterations),
                     |b| {
                         b.iter(|| {
                             let mut pieces = pieces.clone();
-                            por::encode_pipelined_x64_parallel(
+                            por::encode_pipelined_x8_parallel(
                                 criterion::black_box(&mut pieces),
-                                iv,
+                                &ivs,
                                 iterations,
                                 &sbox,
                             );
