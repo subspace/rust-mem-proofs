@@ -33,54 +33,6 @@ pub fn criterion_benchmark(c: &mut Criterion) {
             let mut piece_14 = PIECE;
             let mut piece_15 = PIECE;
             let mut piece_16 = PIECE;
-            let mut piece_17 = PIECE;
-            let mut piece_18 = PIECE;
-            let mut piece_19 = PIECE;
-            let mut piece_20 = PIECE;
-            let mut piece_21 = PIECE;
-            let mut piece_22 = PIECE;
-            let mut piece_23 = PIECE;
-            let mut piece_24 = PIECE;
-            let mut piece_25 = PIECE;
-            let mut piece_26 = PIECE;
-            let mut piece_27 = PIECE;
-            let mut piece_28 = PIECE;
-            let mut piece_29 = PIECE;
-            let mut piece_30 = PIECE;
-            let mut piece_31 = PIECE;
-            let mut piece_32 = PIECE;
-            let mut piece_33 = PIECE;
-            let mut piece_34 = PIECE;
-            let mut piece_35 = PIECE;
-            let mut piece_36 = PIECE;
-            let mut piece_37 = PIECE;
-            let mut piece_38 = PIECE;
-            let mut piece_39 = PIECE;
-            let mut piece_40 = PIECE;
-            let mut piece_41 = PIECE;
-            let mut piece_42 = PIECE;
-            let mut piece_43 = PIECE;
-            let mut piece_44 = PIECE;
-            let mut piece_45 = PIECE;
-            let mut piece_46 = PIECE;
-            let mut piece_47 = PIECE;
-            let mut piece_48 = PIECE;
-            let mut piece_49 = PIECE;
-            let mut piece_50 = PIECE;
-            let mut piece_51 = PIECE;
-            let mut piece_52 = PIECE;
-            let mut piece_53 = PIECE;
-            let mut piece_54 = PIECE;
-            let mut piece_55 = PIECE;
-            let mut piece_56 = PIECE;
-            let mut piece_57 = PIECE;
-            let mut piece_58 = PIECE;
-            let mut piece_59 = PIECE;
-            let mut piece_60 = PIECE;
-            let mut piece_61 = PIECE;
-            let mut piece_62 = PIECE;
-            let mut piece_63 = PIECE;
-            let mut piece_64 = PIECE;
             let mut group = c.benchmark_group("Memory-bound-single");
             group.sample_size(10);
 
@@ -92,6 +44,12 @@ pub fn criterion_benchmark(c: &mut Criterion) {
                 });
 
                 group.bench_function(format!("Prove-{}-iterations-4x", iterations), |b| {
+                    let ivs = [
+                        [1, 1 + 1, 1 + 2],
+                        [2, 2 + 1, 2 + 2],
+                        [3, 3 + 1, 3 + 2],
+                        [4, 4 + 1, 4 + 2],
+                    ];
                     b.iter(|| {
                         por::encode_pipelined_x4(
                             criterion::black_box([
@@ -100,7 +58,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
                                 &mut piece_3,
                                 &mut piece_4,
                             ]),
-                            [iv; 4],
+                            ivs,
                             iterations,
                             &sbox,
                         );
@@ -108,6 +66,16 @@ pub fn criterion_benchmark(c: &mut Criterion) {
                 });
 
                 group.bench_function(format!("Prove-{}-iterations-8x", iterations), |b| {
+                    let ivs = [
+                        [1, 1 + 1, 1 + 2],
+                        [2, 2 + 1, 2 + 2],
+                        [3, 3 + 1, 3 + 2],
+                        [4, 4 + 1, 4 + 2],
+                        [5, 5 + 1, 5 + 2],
+                        [6, 6 + 1, 6 + 2],
+                        [7, 7 + 1, 7 + 2],
+                        [8, 8 + 1, 8 + 2],
+                    ];
                     b.iter(|| {
                         por::encode_pipelined_x8(
                             criterion::black_box([
@@ -120,7 +88,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
                                 &mut piece_7,
                                 &mut piece_8,
                             ]),
-                            [iv; 8],
+                            ivs,
                             iterations,
                             &sbox,
                         );
@@ -128,6 +96,24 @@ pub fn criterion_benchmark(c: &mut Criterion) {
                 });
 
                 group.bench_function(format!("Prove-{}-iterations-16x", iterations), |b| {
+                    let ivs = [
+                        [1, 1 + 1, 1 + 2],
+                        [2, 2 + 1, 2 + 2],
+                        [3, 3 + 1, 3 + 2],
+                        [4, 4 + 1, 4 + 2],
+                        [5, 5 + 1, 5 + 2],
+                        [6, 6 + 1, 6 + 2],
+                        [7, 7 + 1, 7 + 2],
+                        [8, 8 + 1, 8 + 2],
+                        [9, 9 + 1, 9 + 2],
+                        [10, 10 + 1, 10 + 2],
+                        [11, 11 + 1, 11 + 2],
+                        [12, 12 + 1, 12 + 2],
+                        [13, 13 + 1, 13 + 2],
+                        [14, 14 + 1, 14 + 2],
+                        [15, 15 + 1, 15 + 2],
+                        [16, 16 + 1, 16 + 2],
+                    ];
                     b.iter(|| {
                         por::encode_pipelined_x16(
                             criterion::black_box([
@@ -148,136 +134,27 @@ pub fn criterion_benchmark(c: &mut Criterion) {
                                 &mut piece_15,
                                 &mut piece_16,
                             ]),
-                            [iv; 16],
+                            ivs,
                             iterations,
                             &sbox,
                         );
                     })
                 });
 
-                group.bench_function(format!("Prove-{}-iterations-32x", iterations), |b| {
-                    b.iter(|| {
-                        por::encode_pipelined_x32(
-                            criterion::black_box([
-                                &mut piece_1,
-                                &mut piece_2,
-                                &mut piece_3,
-                                &mut piece_4,
-                                &mut piece_5,
-                                &mut piece_6,
-                                &mut piece_7,
-                                &mut piece_8,
-                                &mut piece_9,
-                                &mut piece_10,
-                                &mut piece_11,
-                                &mut piece_12,
-                                &mut piece_13,
-                                &mut piece_14,
-                                &mut piece_15,
-                                &mut piece_16,
-                                &mut piece_17,
-                                &mut piece_18,
-                                &mut piece_19,
-                                &mut piece_20,
-                                &mut piece_21,
-                                &mut piece_22,
-                                &mut piece_23,
-                                &mut piece_24,
-                                &mut piece_25,
-                                &mut piece_26,
-                                &mut piece_27,
-                                &mut piece_28,
-                                &mut piece_29,
-                                &mut piece_30,
-                                &mut piece_31,
-                                &mut piece_32,
-                            ]),
-                            [iv; 32],
-                            iterations,
-                            &sbox,
-                        );
-                    })
-                });
-
-                group.bench_function(format!("Prove-{}-iterations-64x", iterations), |b| {
-                    b.iter(|| {
-                        por::encode_pipelined_x64(
-                            criterion::black_box([
-                                &mut piece_1,
-                                &mut piece_2,
-                                &mut piece_3,
-                                &mut piece_4,
-                                &mut piece_5,
-                                &mut piece_6,
-                                &mut piece_7,
-                                &mut piece_8,
-                                &mut piece_9,
-                                &mut piece_10,
-                                &mut piece_11,
-                                &mut piece_12,
-                                &mut piece_13,
-                                &mut piece_14,
-                                &mut piece_15,
-                                &mut piece_16,
-                                &mut piece_17,
-                                &mut piece_18,
-                                &mut piece_19,
-                                &mut piece_20,
-                                &mut piece_21,
-                                &mut piece_22,
-                                &mut piece_23,
-                                &mut piece_24,
-                                &mut piece_25,
-                                &mut piece_26,
-                                &mut piece_27,
-                                &mut piece_28,
-                                &mut piece_29,
-                                &mut piece_30,
-                                &mut piece_31,
-                                &mut piece_32,
-                                &mut piece_33,
-                                &mut piece_34,
-                                &mut piece_35,
-                                &mut piece_36,
-                                &mut piece_37,
-                                &mut piece_38,
-                                &mut piece_39,
-                                &mut piece_40,
-                                &mut piece_41,
-                                &mut piece_42,
-                                &mut piece_43,
-                                &mut piece_44,
-                                &mut piece_45,
-                                &mut piece_46,
-                                &mut piece_47,
-                                &mut piece_48,
-                                &mut piece_49,
-                                &mut piece_50,
-                                &mut piece_51,
-                                &mut piece_52,
-                                &mut piece_53,
-                                &mut piece_54,
-                                &mut piece_55,
-                                &mut piece_56,
-                                &mut piece_57,
-                                &mut piece_58,
-                                &mut piece_59,
-                                &mut piece_60,
-                                &mut piece_61,
-                                &mut piece_62,
-                                &mut piece_63,
-                                &mut piece_64,
-                            ]),
-                            [iv; 64],
-                            iterations,
-                            &sbox,
-                        );
-                    })
-                });
-
-                group.bench_function(format!("Verify-{}-iterations", iterations), |b| {
+                group.bench_function(format!("Verify-{}-iterations-simple", iterations), |b| {
                     b.iter(|| {
                         por::decode_simple(
+                            criterion::black_box(&mut piece),
+                            iv,
+                            iterations,
+                            &sbox_inverse,
+                        );
+                    })
+                });
+
+                group.bench_function(format!("Verify-{}-iterations-pipelined", iterations), |b| {
+                    b.iter(|| {
+                        por::decode_pipelined(
                             criterion::black_box(&mut piece),
                             iv,
                             iterations,
@@ -291,19 +168,20 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         }
 
         {
-            let pieces: Vec<Piece> = (0..512_usize).map(|_| PIECE).collect();
+            let pieces: Vec<Piece> = (0..=255_usize).map(|_| PIECE).collect();
+            let ivs: Vec<[u8; 3]> = (0..=255_u8).map(|i| [i, i + 1, i + 2]).collect();
             let mut group = c.benchmark_group("Memory-bound-parallel");
             group.sample_size(10);
 
             for &iterations in &[13_000_usize] {
                 group.bench_function(
-                    format!("Prove-{}-iterations-pipelined-x64", iterations),
+                    format!("Prove-{}-iterations-pipelined-x8", iterations),
                     |b| {
                         b.iter(|| {
                             let mut pieces = pieces.clone();
-                            por::encode_pipelined_x64_parallel(
+                            por::encode_pipelined_x8_parallel(
                                 criterion::black_box(&mut pieces),
-                                iv,
+                                &ivs,
                                 iterations,
                                 &sbox,
                             );
